@@ -1,9 +1,6 @@
 import { defineSource } from '@jaspers-ai/sdk'
 import { z } from 'zod'
 
-// The published SDK types a source's arguments as unknown, since from there it cannot see the
-// schema beside them. Each run names what its own input parses to.
-type Args = Record<string, any>
 
 // SEC EDGAR, straight from the source. No key and no account: the SEC asks only that a caller says
 // who it is in its User-Agent and keeps under ten requests a second, and both are done here.
@@ -84,8 +81,7 @@ export const filings = defineSource({
     form: z.string().optional().describe('One form type, like 10-K or 8-K. Left out, every form comes back.'),
     limit: z.number().int().min(1).max(1000).default(40),
   }),
-  async run(raw, ctx) {
-    const { ticker: symbol, form, limit } = raw as Args
+  async run({ ticker: symbol, form, limit }, ctx) {
     const { cik, name } = await lookup(ctx, symbol)
     const data = (await get(ctx, `https://data.sec.gov/submissions/CIK${cik}.json`)) as Submissions
     let rows = rowsOf(data.filings.recent, cik)
@@ -107,8 +103,7 @@ export const facts = defineSource({
     taxonomy: z.string().default('us-gaap'),
     annual: z.boolean().default(false).describe('Only figures from 10-K filings.'),
   }),
-  async run(raw, ctx) {
-    const { ticker: symbol, tag, taxonomy, annual } = raw as Args
+  async run({ ticker: symbol, tag, taxonomy, annual }, ctx) {
     const { cik, name } = await lookup(ctx, symbol)
     const data = (await get(ctx, `https://data.sec.gov/api/xbrl/companyconcept/CIK${cik}/${taxonomy}/${tag}.json`)) as {
       label?: string
@@ -145,8 +140,7 @@ export const insiders = defineSource({
     'Insider forms one company filed: Form 4 as they are reported, newest first, with a link to each. Who bought or sold and how much is inside the linked form.',
   hosts: HOSTS,
   input: z.object({ ticker, limit: z.number().int().min(1).max(500).default(40) }),
-  async run(raw, ctx) {
-    const { ticker: symbol, limit } = raw as Args
+  async run({ ticker: symbol, limit }, ctx) {
     const { cik, name } = await lookup(ctx, symbol)
     const data = (await get(ctx, `https://data.sec.gov/submissions/CIK${cik}.json`)) as Submissions
     const rows = rowsOf(data.filings.recent, cik)
@@ -161,8 +155,7 @@ export const company = defineSource({
   description: 'What the SEC knows about one filer: its name, CIK, tickers and exchanges, industry, state, and fiscal year end.',
   hosts: HOSTS,
   input: z.object({ ticker }),
-  async run(raw, ctx) {
-    const { ticker: symbol } = raw as Args
+  async run({ ticker: symbol }, ctx) {
     const { cik } = await lookup(ctx, symbol)
     const data = (await get(ctx, `https://data.sec.gov/submissions/CIK${cik}.json`)) as Submissions
     return {
