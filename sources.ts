@@ -222,14 +222,16 @@ export const search = defineSource({
     if (sic) params.set('sics', sic)
     if (startDate || endDate) {
       params.set('dateRange', 'custom')
-      if (startDate) params.set('startdt', startDate)
-      if (endDate) params.set('enddt', endDate)
+      params.set('startdt', startDate || '2001-01-01')
+      params.set('enddt', endDate || new Date().toISOString().slice(0, 10))
     }
     const payload = (await getJson(ctx, `https://efts.sec.gov/LATEST/search-index?${params.toString()}`)) as {
       hits?: { total?: { value?: number }; hits?: Record<string, unknown>[] }
     }
     const rawHits = payload.hits?.hits ?? []
-    const rows = normalizeEftsHits(rawHits).sort((a, b) => b.filed.localeCompare(a.filed))
+    const rows = normalizeEftsHits(rawHits)
+      .sort((a, b) => b.filed.localeCompare(a.filed))
+      .slice(0, limit)
     return { totalHits: payload.hits?.total?.value ?? rows.length, rows }
   },
 })
@@ -295,13 +297,14 @@ export const form144 = defineSource({
   async run({ ticker: symbol, limit }, ctx) {
     const { cik, name } = await lookup(ctx, symbol)
     // Form 144 is often filed under the selling insider's CIK referencing the issuer CIK, so EFTS finds all of them.
+    const today = new Date().toISOString().slice(0, 10)
     const params = new URLSearchParams({
       forms: '144',
       ciks: cik,
       dateRange: 'custom',
       startdt: '2023-04-01',
+      enddt: today,
       from: '0',
-      size: String(Math.min(limit * 2, 40)),
     })
     const payload = (await getJson(ctx, `https://efts.sec.gov/LATEST/search-index?${params.toString()}`)) as {
       hits?: { hits?: Record<string, unknown>[] }
@@ -370,18 +373,21 @@ export const activistFilings = defineSource({
   async run({ ticker: symbol, schedule13DOnly, limit }, ctx) {
     const { cik, name } = await lookup(ctx, symbol)
     const forms = schedule13DOnly ? 'SC 13D' : 'SC 13D,SC 13G'
+    const today = new Date().toISOString().slice(0, 10)
     const params = new URLSearchParams({
       forms,
       ciks: cik,
       dateRange: 'custom',
       startdt: '2020-01-01',
+      enddt: today,
       from: '0',
-      size: String(limit),
     })
     const payload = (await getJson(ctx, `https://efts.sec.gov/LATEST/search-index?${params.toString()}`)) as {
       hits?: { hits?: Record<string, unknown>[] }
     }
-    const rows = normalizeEftsHits(payload.hits?.hits ?? []).sort((a, b) => b.filed.localeCompare(a.filed))
+    const rows = normalizeEftsHits(payload.hits?.hits ?? [])
+      .sort((a, b) => b.filed.localeCompare(a.filed))
+      .slice(0, limit)
     return { company: name, cik, rows }
   },
 })
@@ -404,9 +410,10 @@ export const subsidiaries = defineSource({
     const indexUrl = edgarDocUrl(cik, accession, 'index.json')
     const dir = (await getJson(ctx, indexUrl)) as { directory?: { item?: { name?: string }[] } }
     const items = dir.directory?.item ?? []
-    const exFile =
-      items.find((it) => /ex[-_.]?21/i.test(String(it.name ?? '')) && /\.htm(l)?$/i.test(String(it.name ?? ''))) ??
-      items.find((it) => /21\.1|ex21/i.test(String(it.name ?? '')) && /\.(htm|html|txt)$/i.test(String(it.name ?? '')))
+    const exFile = items.find((it) => {
+      const n = String(it.name ?? '')
+      return /\.(htm|html|txt)$/i.test(n) && /ex(?:hibit)?[-_.]?21/i.test(n) && !/ex(?:hibit)?[-_.]?32/i.test(n)
+    })
     if (!exFile?.name) {
       return { company: data.name || name, cik, filingDate, rows: [], note: 'Latest 10-K carried no separate Exhibit 21 file.' }
     }
