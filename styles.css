@@ -1,0 +1,140 @@
+.sc-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: var(--jaspers-background, #fff);
+  color: var(--jaspers-foreground, #171717);
+  font: 13px/1.45 var(--jaspers-font-sans, system-ui, -apple-system, sans-serif);
+}
+
+.sc-bar {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--jaspers-border, #e5e5e5);
+}
+
+.sc-input {
+  border: 1px solid var(--jaspers-border, #e5e5e5);
+  background: var(--jaspers-background, #fff);
+  color: var(--jaspers-foreground, #171717);
+  font: inherit;
+  padding: 2px 6px;
+  outline: none;
+  border-radius: 0;
+}
+
+.sc-input:focus {
+  border-color: var(--jaspers-foreground, #171717);
+}
+
+.sc-ticker {
+  width: 78px;
+  text-transform: uppercase;
+}
+
+.sc-form {
+  width: 68px;
+  text-transform: uppercase;
+}
+
+.sc-query {
+  width: 180px;
+}
+
+.sc-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.sc-tab {
+  border: 1px solid var(--jaspers-border, #e5e5e5);
+  background: var(--jaspers-background, #fff);
+  color: var(--jaspers-muted-foreground, #737373);
+  font: inherit;
+  font-size: 12px;
+  padding: 2px 7px;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.sc-tab-active {
+  background: var(--jaspers-primary, #171717);
+  color: var(--jaspers-primary-foreground, #fff);
+  border-color: var(--jaspers-primary, #171717);
+}
+
+.sc-body {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 0 8px 8px;
+}
+
+.sc-note {
+  margin: 10px 0;
+  color: var(--jaspers-muted-foreground, #737373);
+}
+
+.sc-error {
+  margin: 10px 0;
+  color: var(--jaspers-destructive, #dc2626);
+  white-space: pre-wrap;
+}
+
+.sc-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4px;
+}
+
+.sc-table th,
+.sc-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--jaspers-border, #e5e5e5);
+  text-align: left;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.sc-table th {
+  color: var(--jaspers-muted-foreground, #737373);
+  font-weight: 500;
+}
+
+.sc-table th:last-child,
+.sc-table td:last-child {
+  padding-right: 32px;
+}
+
+.sc-num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-link {
+  border: 0;
+  background: none;
+  color: var(--jaspers-foreground, #171717);
+  font: inherit;
+  font-weight: 500;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sc-link:hover {
+  text-decoration: underline;
+}
+
+.sc-buy {
+  color: var(--jaspers-positive, #15803d);
+}
+
+.sc-sell {
+  color: var(--jaspers-negative, #b91c1c);
+}
